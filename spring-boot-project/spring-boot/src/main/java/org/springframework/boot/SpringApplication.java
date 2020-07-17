@@ -319,6 +319,7 @@ public class SpringApplication {
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
 
 			// 创建Spring Environment 会在构造器里面初始化操作系统的变量值
+			// 同时会注册大量的转换服务
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
 			configureIgnoreBeanInfo(environment);
 			Banner printedBanner = printBanner(environment);
@@ -354,15 +355,22 @@ public class SpringApplication {
 													   ApplicationArguments applicationArguments) {
 		// Create and configure the environment
 		ConfigurableEnvironment environment = getOrCreateEnvironment();
+		// 添加一些Spring ConversionService服务
 		configureEnvironment(environment, applicationArguments.getSourceArgs());
+
 		ConfigurationPropertySources.attach(environment);
+
 		listeners.environmentPrepared(environment);
 		bindToSpringApplication(environment);
+
 		if (!this.isCustomEnvironment) {
 			environment = new EnvironmentConverter(getClassLoader()).convertEnvironmentIfNecessary(environment,
 					deduceEnvironmentClass());
 		}
+
+
 		ConfigurationPropertySources.attach(environment);
+
 		return environment;
 	}
 
@@ -379,6 +387,7 @@ public class SpringApplication {
 
 	private void prepareContext(ConfigurableApplicationContext context, ConfigurableEnvironment environment,
 								SpringApplicationRunListeners listeners, ApplicationArguments applicationArguments, Banner printedBanner) {
+		// 设置环境信息：将环境信息设置到ApplicationContext、AnnotatedBeanDefinitionReader、ClassPathBeanDefinitionScanner等
 		context.setEnvironment(environment);
 		postProcessApplicationContext(context);
 		applyInitializers(context);
@@ -497,6 +506,7 @@ public class SpringApplication {
 	 */
 	protected void configureEnvironment(ConfigurableEnvironment environment, String[] args) {
 		if (this.addConversionService) {
+			// 添加ConversionService服务
 			ConversionService conversionService = ApplicationConversionService.getSharedInstance();
 			environment.setConversionService((ConfigurableConversionService) conversionService);
 		}

@@ -121,8 +121,11 @@ public class AnnotationConfigServletWebApplicationContext extends GenericWebAppl
 	 */
 	@Override
 	public void setEnvironment(ConfigurableEnvironment environment) {
+		// 将环境信息设置到ApplicationContext
 		super.setEnvironment(environment);
+		//将环境信息设置到AnnotatedBeanDefinitionReader
 		this.reader.setEnvironment(environment);
+		//将环境信息设置到ClassPathBeanDefinitionScanner
 		this.scanner.setEnvironment(environment);
 	}
 
