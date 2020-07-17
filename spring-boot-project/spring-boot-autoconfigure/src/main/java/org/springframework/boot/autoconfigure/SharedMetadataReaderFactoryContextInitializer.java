@@ -53,6 +53,7 @@ class SharedMetadataReaderFactoryContextInitializer
 
 	@Override
 	public void initialize(ConfigurableApplicationContext applicationContext) {
+		// 将
 		applicationContext.addBeanFactoryPostProcessor(new CachingMetadataReaderFactoryPostProcessor());
 	}
 
