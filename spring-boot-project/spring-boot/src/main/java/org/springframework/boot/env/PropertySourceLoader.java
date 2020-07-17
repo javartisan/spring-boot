@@ -24,6 +24,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.SpringFactoriesLoader;
 
 /**
+ * SpringBoot配置文件加载器，实现类共计两个：分别是YML与Properties
+ * <p>
  * Strategy interface located via {@link SpringFactoriesLoader} and used to load a
  * {@link PropertySource}.
  *
@@ -35,6 +37,7 @@ public interface PropertySourceLoader {
 
 	/**
 	 * Returns the file extensions that the loader supports (excluding the '.').
+	 *
 	 * @return the file extensions
 	 */
 	String[] getFileExtensions();
@@ -43,8 +46,9 @@ public interface PropertySourceLoader {
 	 * Load the resource into one or more property sources. Implementations may either
 	 * return a list containing a single source, or in the case of a multi-document format
 	 * such as yaml a source for each document in the resource.
-	 * @param name the root name of the property source. If multiple documents are loaded
-	 * an additional suffix should be added to the name for each source loaded.
+	 *
+	 * @param name     the root name of the property source. If multiple documents are loaded
+	 *                 an additional suffix should be added to the name for each source loaded.
 	 * @param resource the resource to load
 	 * @return a list property sources
 	 * @throws IOException if the source cannot be loaded

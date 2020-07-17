@@ -321,7 +321,9 @@ public class SpringApplication {
 			// 创建Spring Environment 会在构造器里面初始化操作系统的变量值
 			// 同时会注册大量的转换服务
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
+
 			configureIgnoreBeanInfo(environment);
+			// 打印启动的Spring图像
 			Banner printedBanner = printBanner(environment);
 
 			// 创建Spring容器; 同时会注册大量的PostProcessor
@@ -351,6 +353,16 @@ public class SpringApplication {
 		return context;
 	}
 
+	/**
+	 * 准备spring运行的Environment，主要完成如下事情：
+	 * 1：创建Environment，并将操作系统的环境变量以及系统属性设置其中。
+	 * 2：添加Spring数据转换工具，ConversionService服务
+	 * 3：Environment环境准备之后发送EnvironmentPrepared事件，然后Listener会加载SpringBoot配置文件到Environment中。
+	 *
+	 * @param listeners
+	 * @param applicationArguments
+	 * @return
+	 */
 	private ConfigurableEnvironment prepareEnvironment(SpringApplicationRunListeners listeners,
 													   ApplicationArguments applicationArguments) {
 		// Create and configure the environment
@@ -360,6 +372,8 @@ public class SpringApplication {
 
 		ConfigurationPropertySources.attach(environment);
 
+		// 通过事件方式加载SpringBoot配置文件.
+		// eg:org.springframework.boot.env.YamlPropertySourceLoader.load方法加载YML（Listner:ConfigFileApplicationListener）
 		listeners.environmentPrepared(environment);
 		bindToSpringApplication(environment);
 
