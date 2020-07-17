@@ -47,6 +47,9 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ *
+ * Spring Boot中的BeanDefinition加载器；类似于Spring 中的AnnotatedBeanDefinitionReader
+ * <p>
  * Loads bean definitions from underlying sources, including XML and JavaConfig. Acts as a
  * simple facade over {@link AnnotatedBeanDefinitionReader},
  * {@link XmlBeanDefinitionReader} and {@link ClassPathBeanDefinitionScanner}. See
@@ -56,7 +59,21 @@ import org.springframework.util.StringUtils;
  * @see #setBeanNameGenerator(BeanNameGenerator)
  */
 class BeanDefinitionLoader {
-
+	/**
+	 * Spring Boot 引导类就是一种source。更多source类型如下：
+	 * if (source instanceof Class<?>) {
+	 * return load((Class<?>) source);
+	 * }
+	 * if (source instanceof Resource) {
+	 * return load((Resource) source);
+	 * }
+	 * if (source instanceof Package) {
+	 * return load((Package) source);
+	 * }
+	 * if (source instanceof CharSequence) {
+	 * return load((CharSequence) source);
+	 * }
+	 */
 	private final Object[] sources;
 
 	private final AnnotatedBeanDefinitionReader annotatedReader;
@@ -72,24 +89,29 @@ class BeanDefinitionLoader {
 	/**
 	 * Create a new {@link BeanDefinitionLoader} that will load beans into the specified
 	 * {@link BeanDefinitionRegistry}.
+	 *
 	 * @param registry the bean definition registry that will contain the loaded beans
-	 * @param sources the bean sources
+	 * @param sources  the bean sources
 	 */
 	BeanDefinitionLoader(BeanDefinitionRegistry registry, Object... sources) {
 		Assert.notNull(registry, "Registry must not be null");
 		Assert.notEmpty(sources, "Sources must not be empty");
 		this.sources = sources;
+		// 注解Bean定义阅读器
 		this.annotatedReader = new AnnotatedBeanDefinitionReader(registry);
+		//XML Bean定义阅读器
 		this.xmlReader = new XmlBeanDefinitionReader(registry);
 		if (isGroovyPresent()) {
 			this.groovyReader = new GroovyBeanDefinitionReader(registry);
 		}
+		// 组件定义Scanner扫描器
 		this.scanner = new ClassPathBeanDefinitionScanner(registry);
 		this.scanner.addExcludeFilter(new ClassExcludeFilter(sources));
 	}
 
 	/**
 	 * Set the bean name generator to be used by the underlying readers and scanner.
+	 *
 	 * @param beanNameGenerator the bean name generator
 	 */
 	void setBeanNameGenerator(BeanNameGenerator beanNameGenerator) {
@@ -100,6 +122,7 @@ class BeanDefinitionLoader {
 
 	/**
 	 * Set the resource loader to be used by the underlying readers and scanner.
+	 *
 	 * @param resourceLoader the resource loader
 	 */
 	void setResourceLoader(ResourceLoader resourceLoader) {
@@ -110,6 +133,7 @@ class BeanDefinitionLoader {
 
 	/**
 	 * Set the environment to be used by the underlying readers and scanner.
+	 *
 	 * @param environment the environment
 	 */
 	void setEnvironment(ConfigurableEnvironment environment) {
@@ -120,6 +144,7 @@ class BeanDefinitionLoader {
 
 	/**
 	 * Load the sources into the reader.
+	 *
 	 * @return the number of loaded beans
 	 */
 	int load() {
@@ -147,6 +172,12 @@ class BeanDefinitionLoader {
 		throw new IllegalArgumentException("Invalid source type " + source.getClass());
 	}
 
+	/**
+	 * 根据Class Source解析注解配置
+	 *
+	 * @param source
+	 * @return
+	 */
 	private int load(Class<?> source) {
 		if (isGroovyPresent() && GroovyBeanDefinitionSource.class.isAssignableFrom(source)) {
 			// Any GroovyLoaders added in beans{} DSL can contribute beans here
@@ -186,8 +217,7 @@ class BeanDefinitionLoader {
 		// Attempt as a Class
 		try {
 			return load(ClassUtils.forName(resolvedSource, null));
-		}
-		catch (IllegalArgumentException | ClassNotFoundException ex) {
+		} catch (IllegalArgumentException | ClassNotFoundException ex) {
 			// swallow exception and continue
 		}
 		// Attempt as resources
@@ -222,9 +252,8 @@ class BeanDefinitionLoader {
 			if (loader instanceof ResourcePatternResolver) {
 				return ((ResourcePatternResolver) loader).getResources(source);
 			}
-			return new Resource[] { loader.getResource(source) };
-		}
-		catch (IOException ex) {
+			return new Resource[]{loader.getResource(source)};
+		} catch (IOException ex) {
 			throw new IllegalStateException("Error reading source '" + source + "'");
 		}
 	}
@@ -242,8 +271,7 @@ class BeanDefinitionLoader {
 			if (path.indexOf('.') == -1) {
 				try {
 					return Package.getPackage(path) == null;
-				}
-				catch (Exception ex) {
+				} catch (Exception ex) {
 					// Ignore
 				}
 			}
@@ -266,8 +294,7 @@ class BeanDefinitionLoader {
 				load(Class.forName(source.toString() + "." + className));
 				break;
 			}
-		}
-		catch (Exception ex) {
+		} catch (Exception ex) {
 			// swallow exception and continue
 		}
 		return Package.getPackage(source.toString());

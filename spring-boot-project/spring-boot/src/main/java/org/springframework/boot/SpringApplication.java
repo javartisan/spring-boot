@@ -195,6 +195,9 @@ public class SpringApplication {
 
 	private static final Log logger = LogFactory.getLog(SpringApplication.class);
 
+	/**
+	 * 默认情况下是SpringApplication的启动引导类
+	 */
 	private Set<Class<?>> primarySources;
 
 	private Set<String> sources = new LinkedHashSet<>();
@@ -267,13 +270,17 @@ public class SpringApplication {
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
+
 		this.resourceLoader = resourceLoader;
 		Assert.notNull(primarySources, "PrimarySources must not be null");
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
+
 		// 检测当前应用运行的环境
 		this.webApplicationType = WebApplicationType.deduceFromClasspath();
+
 		// getSpringFactoriesInstances 方法完成spring.factories中的 ApplicationContextInitializer Bean加载到容器中
 		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
+
 		// getSpringFactoriesInstances 方法完成spring.factories中的 ApplicationListener Bean加载到容器中
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
 
@@ -323,20 +330,28 @@ public class SpringApplication {
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
 
 			configureIgnoreBeanInfo(environment);
+
 			// 打印启动的Spring图像
 			Banner printedBanner = printBanner(environment);
 
 			// 创建Spring容器; 同时会注册大量的PostProcessor
 			context = createApplicationContext();
+
+			// 创建spring.factories中的SpringBootExceptionReporter实例
 			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class,
 					new Class[]{ConfigurableApplicationContext.class}, context);
+
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
+
 			refreshContext(context);
+
 			afterRefresh(context, applicationArguments);
+
 			stopWatch.stop();
 			if (this.logStartupInfo) {
 				new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), stopWatch);
 			}
+
 			listeners.started(context);
 			callRunners(context, applicationArguments);
 		} catch (Throwable ex) {
@@ -404,6 +419,8 @@ public class SpringApplication {
 		// 设置环境信息：将环境信息设置到ApplicationContext、AnnotatedBeanDefinitionReader、ClassPathBeanDefinitionScanner等
 		context.setEnvironment(environment);
 		postProcessApplicationContext(context);
+
+		// 应用ApplicationContextInitializer,ApplicationContextInitializer作用是在ApplicationContext refresh之前进行初始化一些操作
 		applyInitializers(context);
 		listeners.contextPrepared(context);
 		if (this.logStartupInfo) {
@@ -417,15 +434,19 @@ public class SpringApplication {
 			beanFactory.registerSingleton("springBootBanner", printedBanner);
 		}
 		if (beanFactory instanceof DefaultListableBeanFactory) {
+			// 设置Bean定义是否允许覆盖
 			((DefaultListableBeanFactory) beanFactory)
 					.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
 		}
 		if (this.lazyInitialization) {
+			// 是否延迟加载,如果延迟加载则添加BeanFactoryPostProcessor
 			context.addBeanFactoryPostProcessor(new LazyInitializationBeanFactoryPostProcessor());
 		}
 		// Load the sources
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
+
+		// 加载Bean到spring容器
 		load(context, sources.toArray(new Object[0]));
 		listeners.contextLoaded(context);
 	}
@@ -632,7 +653,8 @@ public class SpringApplication {
 						"Unable create a default ApplicationContext, please specify an ApplicationContextClass", ex);
 			}
 		}
-		// 实例化ApplicationContext时候会在初始化PostProcessor,eg:AnnotationConfigServletWebServerApplicationContext
+		// 实例化ApplicationContext(AnnotationConfigServletWebServerApplicationContext);
+		// 与此同时还会注册BeanPostProcessor ：ConfigurationClassPostProcessor、AutowiredAnnotationBeanPostProcessor、CommonAnnotationBeanPostProcessor等。
 		return (ConfigurableApplicationContext) BeanUtils.instantiateClass(contextClass);
 	}
 
@@ -731,6 +753,8 @@ public class SpringApplication {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Loading source " + StringUtils.arrayToCommaDelimitedString(sources));
 		}
+
+		// 根据BeanDefinitionRegistry与Source（例如：PrimarySource）创建BeanDefinition加载器
 		BeanDefinitionLoader loader = createBeanDefinitionLoader(getBeanDefinitionRegistry(context), sources);
 		if (this.beanNameGenerator != null) {
 			loader.setBeanNameGenerator(this.beanNameGenerator);
@@ -769,6 +793,8 @@ public class SpringApplication {
 	}
 
 	/**
+	 *
+	 *
 	 * Get the bean definition registry.
 	 *
 	 * @param context the application context
@@ -779,6 +805,7 @@ public class SpringApplication {
 			return (BeanDefinitionRegistry) context;
 		}
 		if (context instanceof AbstractApplicationContext) {
+			//  Spring大部分容器实现 BeanDefinitionRegistry接口，因此也是BeanDefinitionRegistry的实例
 			return (BeanDefinitionRegistry) ((AbstractApplicationContext) context).getBeanFactory();
 		}
 		throw new IllegalStateException("Could not locate BeanDefinitionRegistry");
@@ -792,6 +819,12 @@ public class SpringApplication {
 	 * @return the {@link BeanDefinitionLoader} that will be used to load beans
 	 */
 	protected BeanDefinitionLoader createBeanDefinitionLoader(BeanDefinitionRegistry registry, Object[] sources) {
+		// 创建BeanDefinitionLoader，初始化BeanDefinitionLoader成员，具体成员如下：
+		//
+		//		this.annotatedReader = new AnnotatedBeanDefinitionReader(registry);
+		//		this.xmlReader = new XmlBeanDefinitionReader(registry);
+		//		this.scanner = new ClassPathBeanDefinitionScanner(registry);
+		//		this.scanner.addExcludeFilter(new ClassExcludeFilter(sources));
 		return new BeanDefinitionLoader(registry, sources);
 	}
 
@@ -1187,6 +1220,8 @@ public class SpringApplication {
 	}
 
 	/**
+	 * 获取
+	 * <p>
 	 * Return an immutable set of all the sources that will be added to an
 	 * ApplicationContext when {@link #run(String...)} is called. This method combines any
 	 * primary sources specified in the constructor with any additional ones that have
@@ -1196,6 +1231,7 @@ public class SpringApplication {
 	 */
 	public Set<Object> getAllSources() {
 		Set<Object> allSources = new LinkedHashSet<>();
+		// primarySource 是SpringApplication#run方法中的class
 		if (!CollectionUtils.isEmpty(this.primarySources)) {
 			allSources.addAll(this.primarySources);
 		}
