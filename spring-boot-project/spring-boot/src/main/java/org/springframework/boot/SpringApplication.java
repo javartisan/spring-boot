@@ -414,6 +414,13 @@ public class SpringApplication {
 		}
 	}
 
+	/**
+	 * @param context
+	 * @param environment
+	 * @param listeners
+	 * @param applicationArguments
+	 * @param printedBanner
+	 */
 	private void prepareContext(ConfigurableApplicationContext context, ConfigurableEnvironment environment,
 								SpringApplicationRunListeners listeners, ApplicationArguments applicationArguments, Banner printedBanner) {
 		// 设置环境信息：将环境信息设置到ApplicationContext、AnnotatedBeanDefinitionReader、ClassPathBeanDefinitionScanner等
@@ -446,15 +453,17 @@ public class SpringApplication {
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
 
-		// 加载Bean到spring容器
+		// 加载Bean定义,并根据加载Bean定义实例化Bean到spring容器
 		load(context, sources.toArray(new Object[0]));
 		listeners.contextLoaded(context);
 	}
 
 	private void refreshContext(ConfigurableApplicationContext context) {
+		// 刷新refresh
 		refresh(context);
 		if (this.registerShutdownHook) {
 			try {
+				//注册钩子
 				context.registerShutdownHook();
 			} catch (AccessControlException ex) {
 				// Not allowed in some environments.
@@ -793,8 +802,6 @@ public class SpringApplication {
 	}
 
 	/**
-	 *
-	 *
 	 * Get the bean definition registry.
 	 *
 	 * @param context the application context
