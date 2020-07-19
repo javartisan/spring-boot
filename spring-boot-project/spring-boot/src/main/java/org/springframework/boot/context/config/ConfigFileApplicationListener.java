@@ -218,6 +218,8 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 	}
 
 	/**
+	 * 通过事件处理器 `添加属性文件的后置处理器`
+	 * <p>
 	 * Add appropriate post-processors to post-configure the property-sources.
 	 *
 	 * @param context the context to configure

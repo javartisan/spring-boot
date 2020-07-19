@@ -306,8 +306,9 @@ class BeanDefinitionLoader {
 		if (MergedAnnotations.from(type, SearchStrategy.TYPE_HIERARCHY).isPresent(Component.class)) {
 			return true;
 		}
-		// Nested anonymous classes are not eligible for registration, nor are groovy
-		// closures
+		// Nested anonymous classes are not eligible for registration, nor are groovy closures
+
+		// This method returns an array of length 0 if this Class object represents an interface, a primitive type, an array class, or void.
 		return !type.getName().matches(".*\\$_.*closure.*") && !type.isAnonymousClass()
 				&& type.getConstructors() != null && type.getConstructors().length != 0;
 	}

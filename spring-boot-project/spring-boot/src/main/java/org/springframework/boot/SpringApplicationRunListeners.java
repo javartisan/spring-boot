@@ -34,7 +34,9 @@ import org.springframework.util.ReflectionUtils;
 class SpringApplicationRunListeners {
 
 	private final Log log;
-
+	/**
+	 * SpringBoot的Listeners
+	 */
 	private final List<SpringApplicationRunListener> listeners;
 
 	SpringApplicationRunListeners(Log log, Collection<? extends SpringApplicationRunListener> listeners) {
@@ -60,6 +62,12 @@ class SpringApplicationRunListeners {
 		}
 	}
 
+	/**
+	 * 当SpringBoot Application引导类定义被注册之后,会将初始化在SpringBoot中的Listener注册到Spring的ApplicationContext中。
+	 * 监听器做的重要事情有：addPostProcessors:234, ConfigFileApplicationListener 完成配置文件后置处理器PropertySourceOrderingPostProcessor添加到容器
+	 *
+	 * @param context
+	 */
 	void contextLoaded(ConfigurableApplicationContext context) {
 		for (SpringApplicationRunListener listener : this.listeners) {
 			listener.contextLoaded(context);
@@ -85,18 +93,16 @@ class SpringApplicationRunListeners {
 	}
 
 	private void callFailedListener(SpringApplicationRunListener listener, ConfigurableApplicationContext context,
-			Throwable exception) {
+									Throwable exception) {
 		try {
 			listener.failed(context, exception);
-		}
-		catch (Throwable ex) {
+		} catch (Throwable ex) {
 			if (exception == null) {
 				ReflectionUtils.rethrowRuntimeException(ex);
 			}
 			if (this.log.isDebugEnabled()) {
 				this.log.error("Error handling failed", ex);
-			}
-			else {
+			} else {
 				String message = ex.getMessage();
 				message = (message != null) ? message : "no error message";
 				this.log.warn("Error handling failed (" + message + ")");

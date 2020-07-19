@@ -230,6 +230,9 @@ public class SpringApplication {
 
 	private List<ApplicationContextInitializer<?>> initializers;
 
+	/**
+	 * SpringBoot作用域内的ApplicationListener
+	 */
 	private List<ApplicationListener<?>> listeners;
 
 	private Map<String, Object> defaultProperties;
@@ -319,6 +322,8 @@ public class SpringApplication {
 		ConfigurableApplicationContext context = null;
 		Collection<SpringBootExceptionReporter> exceptionReporters = new ArrayList<>();
 		configureHeadlessProperty();
+
+		//获取SpringBoot SpringApplicationRunListeners，是根据spring.factories方式加载到容器的
 		SpringApplicationRunListeners listeners = getRunListeners(args);
 		listeners.starting();
 		try {
@@ -455,6 +460,9 @@ public class SpringApplication {
 
 		// 加载Bean定义,并根据加载Bean定义实例化Bean到spring容器
 		load(context, sources.toArray(new Object[0]));
+
+		// 将SpringBoot的监听器设置到Spring ApplicationCon中，同时发送ApplicationPreparedEvent事件并处理ApplicationPreparedEvent事件。
+		// 一个比较重要的时间就是 ConfigFileApplicationListener 完成配置文件后置处理器PropertySourceOrderingPostProcessor添加到容器
 		listeners.contextLoaded(context);
 	}
 
@@ -774,6 +782,10 @@ public class SpringApplication {
 		if (this.environment != null) {
 			loader.setEnvironment(this.environment);
 		}
+
+		//SpringBoot启动执行此处注册中心只含有两类Bean定义，分别如下：
+		//第一类：spring.factories中的Bean定义（该类并不是在load方法,在SpringApplication的getSpringFactoriesInstances方法中完成）
+		//第二类  spring boot引导类在load方法完成
 		loader.load();
 	}
 
