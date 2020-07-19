@@ -420,6 +420,11 @@ public class SpringApplication {
 	}
 
 	/**
+	 * 主要重要事情:
+	 * 1: 将引导类定义注册到容器中
+	 * 2: 将SpringBoot的监听器设置到Spring ApplicationCon中，同时发送ApplicationPreparedEvent事件并处理ApplicationPreparedEvent事件;
+	 * 一个比较重要的时间就是 ConfigFileApplicationListener 完成配置文件后置处理器PropertySourceOrderingPostProcessor添加到容器。
+	 *
 	 * @param context
 	 * @param environment
 	 * @param listeners
