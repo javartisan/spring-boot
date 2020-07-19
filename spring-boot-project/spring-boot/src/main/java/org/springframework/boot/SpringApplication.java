@@ -346,10 +346,14 @@ public class SpringApplication {
 			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class,
 					new Class[]{ConfigurableApplicationContext.class}, context);
 
+			// 将SpringBoot引导类的定义注册到注册中心;
+			// 同时通过ConfigFileApplicationListener 完成配置文件后置处理器PropertySourceOrderingPostProcessor添加到容器。
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
 
+			// 对应Spring的refresh方法
 			refreshContext(context);
 
+			// 调用Spring的org.springframework.context.support.AbstractApplicationContext#refresh()方法
 			afterRefresh(context, applicationArguments);
 
 			stopWatch.stop();
@@ -471,6 +475,11 @@ public class SpringApplication {
 		listeners.contextLoaded(context);
 	}
 
+	/**
+	 * 调用Spring的org.springframework.context.support.AbstractApplicationContext#refresh()方法
+	 *
+	 * @param context
+	 */
 	private void refreshContext(ConfigurableApplicationContext context) {
 		// 刷新refresh
 		refresh(context);
@@ -859,6 +868,7 @@ public class SpringApplication {
 	 */
 	protected void refresh(ApplicationContext applicationContext) {
 		Assert.isInstanceOf(AbstractApplicationContext.class, applicationContext);
+		//调用Spring的org.springframework.context.support.AbstractApplicationContext#refresh()方法
 		((AbstractApplicationContext) applicationContext).refresh();
 	}
 
